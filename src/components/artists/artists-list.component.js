@@ -1,111 +1,87 @@
 import { Component } from "react";
-
-class ArtistListComponent extends Component {
+import { Link } from "react-router-dom";
+import artists from "./artist.data";
+import ArtistService from '../../services/artists.service'
+export default class ArtistListComponent extends Component {
     constructor(props) {
-        super(props)
-
-        this.artists = [{
-            "_id": {
-                "$oid": "6290e1575935aeaf9db386a2"
-            },
-            "last_name": "Rippl-Ronai",
-            "first_name": "Joszef",
-            "year_born": 1861,
-            "year_died": 1927,
-            "nationality": "Hungary"
-        }, {
-            "_id": {
-                "$oid": "6290e1575935aeaf9db386a3"
-            },
-            "last_name": "Ostroumova",
-            "first_name": "Anna",
-            "year_born": 1871,
-            "year_died": 1955,
-            "nationality": "Russia"
-        }, {
-            "_id": {
-                "$oid": "6290e1575935aeaf9db386a4"
-            },
-            "last_name": "Van Gogh",
-            "first_name": "Vincent",
-            "year_born": 1853,
-            "year_died": 1890,
-            "nationality": "Holland"
-        }, {
-            "_id": {
-                "$oid": "6290e1575935aeaf9db386a5"
-            },
-            "last_name": "Maurer",
-            "first_name": "Alfred",
-            "year_born": 1868,
-            "year_died": 1932,
-            "nationality": "USA"
-        }, {
-            "_id": {
-                "$oid": "6290e1575935aeaf9db386a6"
-            },
-            "last_name": "Munch",
-            "first_name": "Edvard",
-            "year_born": 1863,
-            "year_died": 1944,
-            "nationality": "Norway"
-        }, {
-            "_id": {
-                "$oid": "6290e1575935aeaf9db386a7"
-            },
-            "last_name": "Redon",
-            "first_name": "Odilon",
-            "year_born": 1840,
-            "year_died": 1916,
-            "nationality": "France"
-        }, {
-            "_id": {
-                "$oid": "6290e1575935aeaf9db386a8"
-            },
-            "last_name": "Diriks",
-            "first_name": "Edvard",
-            "year_born": 1855,
-            "year_died": 1930,
-            "nationality": "Norway"
-        }, {
-            "_id": {
-                "$oid": "629a0bd9d71601671be2e279"
-            },
-            "first_name": "Hồ",
-            "last_name": "Chí Minh",
-            "nationality": "Vietnam",
-            "year_born": 1890,
-            "year_died": 1969,
-            "works": []
-        }]
-
+        super(props);
+        this.service = new ArtistService()
+        this.artists = artists;
         this.selectedRows = []
-        this.sate = { xRows: [] }
+        this.state = {
+            loading: false,
+            _length: 0,
+            _artists: []
+        }
+    }
+
+    componentDidMount() {
+        this.service.GetAllArtist({ skip: 0, take: 5, orderBy:'-year_born' }).then(res => {
+            console.log(res.data)
+            //setState data
+            this.setState({
+                loading: true,
+                _length: res.data.length,
+                _artists: res.data.data
+            })
+        });
+    }
+
+    getData(params) {
+        // this.setState({
+        //     loading: false,
+        //     _length: 0,
+        //     _artists: []
+        // })
+        this.service.GetAllArtist({ skip: params.skip, take: params.take, orderBy:'-year_born' }).then(res => {
+            console.log(res.data)
+            //setState data
+            this.setState({
+                loading: true,
+                _length: res.data.length,
+                _artists: res.data.data
+            })
+        });
     }
     onSelectedRow = (rows) => {
         console.log("console from parent component", rows)
     }
     render() {
+        const { loading, _length, _artists } = this.state;
+        if (!loading) {
+            return (
+                <h1>Loading...</h1>
+            )
+        }
+
         return (
             <div>
                 <h1>Danh sách artists</h1>
                 <table>
                     <thead>
-                        <tr><th>#</th><th></th><th>First Name</th><th>Last Name</th><th>Nationality</th><th>Born</th></tr>
+                        <tr><th>#</th><th></th><th>First Name</th><th>Last Name</th><th>Nationality</th><th>Born</th><th>Died</th><th>Age</th></tr>
                     </thead>
                     <tbody>
-                        <TableRow data={this.artists} onSelectedRow={(rows) => {
+                        <ArtistRow data={_artists} onSelectedRow={(rows) => {
                             console.log(`console from property${new Date()}`)
                             this.onSelectedRow(rows)
-                        }}/>
+                        }} />
                     </tbody>
+                    <tfoot><tr>
+                        <th colSpan={2}><h4>Tổng số: {_length}</h4></th>
+                        <th colSpan={6}>
+                            <input type={'button'} onClick={(e) => this.getData({ skip: 0, take: 5 })} value="1" />
+                            <input type={'button'} onClick={(e) => this.getData({ skip: 5, take: 5 })} value="2" />
+                        </th>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         )
     }
 }
 
-class TableRow extends Component {
+class ArtistRow extends Component {
     constructor(props) {
         super(props)
         this.data = props.data;
@@ -120,12 +96,11 @@ class TableRow extends Component {
     }
     render() {
         return this.data.map((row) =>
-            <tr>
-                <td>{this.data.indexOf(row) + 1}</td><td><input type="checkbox" onChange={(e) => {
+            <tr key={`${row._id}`}>
+                <td><Link to={`/artists/details/${row._id}/${row.year_born}`} id={`${row._id}`}>{this.data.indexOf(row) + 1}</Link></td><td><input type="checkbox" onChange={(e) => {
                     this.selectRow(row);
-                }}></input></td><td>{row.first_name}</td><td>{row.last_name}</td><td>{row.nationality}</td><td>{row.year_born}</td>
+                }}></input></td><td>{row.first_name}</td><td>{row.last_name}</td><td>{row.nationality}</td><td>{row.year_born}</td><td>{row.year_died}</td><td>{row.year_died - row.year_born}</td>
             </tr>
         );
     }
 }
-export default ArtistListComponent
