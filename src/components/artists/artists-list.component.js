@@ -6,17 +6,27 @@ export default class ArtistListComponent extends Component {
     constructor(props) {
         super(props);
         this.service = new ArtistService()
-        this.artists = artists;
+        //this.artists = artists;
+        this.artists = [];
         this.selectedRows = []
         this.state = {
             loading: false,
+            _count: 0,
             _length: 0,
             _artists: []
         }
     }
 
     componentDidMount() {
-        this.service.GetAllArtist({ skip: 0, take: 5, orderBy:'-year_born' }).then(res => {
+        this.service.Count().then(res => {
+            this.setState({
+                loading: this.state.loading,
+                _count: res.data.count,
+                _length: this.state._length,
+                _artists: this.state._artists
+            })
+        })
+        this.service.GetAllArtist({ skip: 0, take: 5, orderBy: '-year_born' }).then(res => {
             console.log(res.data)
             //setState data
             this.setState({
@@ -27,17 +37,19 @@ export default class ArtistListComponent extends Component {
         });
     }
 
-    getData(params) {
-        // this.setState({
-        //     loading: false,
-        //     _length: 0,
-        //     _artists: []
-        // })
-        this.service.GetAllArtist({ skip: params.skip, take: params.take, orderBy:'-year_born' }).then(res => {
+    navigate(params) {
+        this.setState({
+            loading: false,
+            _count: this.state._count,
+            _length: this.state._length,
+            _artists: this.state._artists
+        })
+        this.service.GetAllArtist({ skip: params.skip, take: params.take, orderBy: 'last_name' }).then(res => {
             console.log(res.data)
             //setState data
             this.setState({
                 loading: true,
+                _count: this.state._count,
                 _length: res.data.length,
                 _artists: res.data.data
             })
@@ -47,13 +59,19 @@ export default class ArtistListComponent extends Component {
         console.log("console from parent component", rows)
     }
     render() {
-        const { loading, _length, _artists } = this.state;
+        const { loading, _length, _artists, _count } = this.state;
         if (!loading) {
             return (
                 <h1>Loading...</h1>
             )
         }
-
+        var pages = [1];
+        if (_count > 5) {
+            while (pages.length <= Math.round(_count / 5)) {
+                pages.push(pages.length + 1)
+            }
+            console.log(pages)
+        }
         return (
             <div>
                 <h1>Danh sách artists</h1>
@@ -68,10 +86,15 @@ export default class ArtistListComponent extends Component {
                         }} />
                     </tbody>
                     <tfoot><tr>
-                        <th colSpan={2}><h4>Tổng số: {_length}</h4></th>
+                        <th colSpan={2}><h4>Tổng số: {this.state._count} artists</h4></th>
                         <th colSpan={6}>
-                            <input type={'button'} onClick={(e) => this.getData({ skip: 0, take: 5 })} value="1" />
-                            <input type={'button'} onClick={(e) => this.getData({ skip: 5, take: 5 })} value="2" />
+                            {
+                                pages.map((p) => {
+                                    return <input type={'button'} onClick={(e) => this.navigate({ skip: (p - 1) * 5, take: 5 })} value={p} />
+                                })
+                            }
+                            {/* <input type={'button'} onClick={(e) => this.navigate({ skip: 0, take: 5 })} value="1" />
+                            <input type={'button'} onClick={(e) => this.navigate({ skip: 5, take: 5 })} value="2" /> */}
                         </th>
                     </tr>
                     </tfoot>
@@ -99,7 +122,7 @@ class ArtistRow extends Component {
             <tr key={`${row._id}`}>
                 <td><Link to={`/artists/details/${row._id}/${row.year_born}`} id={`${row._id}`}>{this.data.indexOf(row) + 1}</Link></td><td><input type="checkbox" onChange={(e) => {
                     this.selectRow(row);
-                }}></input></td><td>{row.first_name}</td><td>{row.last_name}</td><td>{row.nationality}</td><td>{row.year_born}</td><td>{row.year_died}</td><td>{row.year_died - row.year_born}</td>
+                }}></input></td><td>{row.first_name}</td><td>{row.last_name}</td><td>{row.nationality}</td><td>{row.year_born}</td><td>{row.year_died}</td><td>{row.year_died ? row.year_died - row.year_born : 102}</td>
             </tr>
         );
     }

@@ -1,11 +1,12 @@
 import { BrowserRouter, Switch, Routes, Route } from "react-router-dom";
 import Table from "./Table";
-import Navigation from "./Navigation";
+import Navigation from "./layout/Navigation";
 import ArtistListComponent from './components/artists/artists-list.component'
 import ArtistDetailComponent from "./components/artists/artist-detail.component";
 import ContactListComponent from "./components/contacts/contact-list.component";
 import NoLink from './components/twowaybinding/nolink.component'
 import WithLink from "./components/twowaybinding/withlink.component";
+import TicketListComponent from "./components/tickets/ticket-list.component";
 const users = [
     {
         email: "gowtham@outlook.com",
@@ -54,6 +55,7 @@ const App = () => {
                     </Route>
                     <Route path="artists/details/:_id/:_year_born" element={<ArtistDetailComponent />} />
                     <Route path="contacts" element={<ContactListComponent />} />
+                    <Route path="tickets" element={<TicketListComponent/>}></Route>
                 </Route>
 
             </Routes>

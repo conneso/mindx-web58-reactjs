@@ -13,4 +13,12 @@ export default class BaseService {
         })
         return result;
     }
+    Count = async ()=>{
+        var result = await axios({
+            method: 'GET',
+            url: `${this.api}/${this.endpoint}/count`,
+            data: null
+        })
+        return result;
+    }
 }
